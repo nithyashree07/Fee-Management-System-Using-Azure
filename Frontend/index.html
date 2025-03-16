@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fee Management System</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://alcdn.msauth.net/browser/2.22.0/js/msal-browser.min.js"></script>
+</head>
+<body>
+    <h1>Fee Management System</h1>
+
+    <!-- Role Selection -->
+    <section id="roleSelection">
+        <h2>Select Your Role</h2>
+        <button onclick="showStudentView()">I'm a Student</button>
+        <button onclick="showAdminView()">I'm an Admin</button>
+    </section>
+
+    <!-- Student View -->
+    <section id="studentView" class="hidden">
+        <h2>Check Fee Status</h2>
+        <input type="text" id="studentId" placeholder="Enter Student ID">
+        <button onclick="fetchFeeStatus()">Get Status</button>
+        <div id="statusResult"></div>
+        <button onclick="goBack()">Back</button>
+    </section>
+
+    <!-- Admin View -->
+    <section id="adminView" class="hidden">
+        <h2>Admin Panel</h2>
+        <button onclick="login()">Admin Login</button>
+
+        <h3>Check Fee Status</h3>
+        <input type="text" id="adminStudentId" placeholder="Enter Student ID">
+        <button onclick="fetchFeeStatus(true)">Get Status</button>
+        <div id="adminStatusResult"></div>
+
+        <h3>Update Fee Payment</h3>
+        <input type="text" id="updateStudentId" placeholder="Enter Student ID">
+        <input type="text" id="paidAmount" placeholder="Enter Paid Amount">
+        <button onclick="updateFee()">Update Payment</button>
+        <div id="updateMessage"></div>
+        
+        <button onclick="goBack()">Back</button>
+    </section>
+
+    <script src="script.js"></script>
+</body>
+</html>

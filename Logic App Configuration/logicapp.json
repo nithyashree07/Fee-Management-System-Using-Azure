@@ -1,0 +1,147 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "contentVersion": "1.0.0.0",
+        "triggers": {
+            "Recurrence": {
+                "recurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "India Standard Time",
+                    "schedule": {
+                        "hours": [
+                            9,
+                            18
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "evaluatedRecurrence": {
+                    "interval": 1,
+                    "frequency": "Day",
+                    "timeZone": "India Standard Time",
+                    "schedule": {
+                        "hours": [
+                            9,
+                            18
+                        ],
+                        "minutes": [
+                            0
+                        ]
+                    }
+                },
+                "type": "Recurrence"
+            }
+        },
+        "actions": {
+            "Execute_a_SQL_query_(V2)": {
+                "runAfter": {},
+                "type": "ApiConnection",
+                "inputs": {
+                    "host": {
+                        "connection": {
+                            "name": "@parameters('$connections')['sql']['connectionId']"
+                        }
+                    },
+                    "method": "post",
+                    "body": {
+                        "query": "SELECT Name, Email, Course, PaidAmount, TotalFee, DueDate\nFROM Students \nWHERE PaidAmount < TotalFee;\n"
+                    },
+                    "path": "/v2/datasets/@{encodeURIComponent(encodeURIComponent('default'))},@{encodeURIComponent(encodeURIComponent('default'))}/query/sql"
+                }
+            },
+            "For_each": {
+                "foreach": "@body('Execute_a_SQL_query_(V2)')?['resultsets']?['Table1']",
+                "actions": {
+                    "Condition": {
+                        "actions": {
+                            "Send_an_email_(V2)": {
+                                "type": "ApiConnection",
+                                "inputs": {
+                                    "host": {
+                                        "connection": {
+                                            "name": "@parameters('$connections')['outlook']['connectionId']"
+                                        }
+                                    },
+                                    "method": "post",
+                                    "body": {
+                                        "To": "@item()?['Email']",
+                                        "Subject": "Fee Payment Reminder",
+                                        "Body": "<p class=\"editor-paragraph\">Dear @{item()?['Name']},<br><br>We hope this email finds you well. This is a reminder that your fee payment for the<b><strong class=\"editor-text-bold\"> </strong></b>@{item()?['Course']} course is due on<b><strong class=\"editor-text-bold\"> </strong></b>@{formatDateTime(item()?['DueDate'], 'yyyy-MM-dd')}<b><strong class=\"editor-text-bold\">.</strong></b><br><br><b><strong class=\"editor-text-bold\">Total Fee</strong></b>: ₹@{item()?['TotalFee']}<br><b><strong class=\"editor-text-bold\">Paid Amount</strong></b>: ₹@{item()?['PaidAmount']}</p><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">Remaining Balance</strong></b>: ₹@{sub(item()?['TotalFee'], item()?['PaidAmount'])}<br><br>To avoid late fees or any inconvenience, we kindly request you to<b><strong class=\"editor-text-bold\"> complete your payment before the due date</strong></b>.<br><br><b><strong class=\"editor-text-bold\">Best R</strong></b><b><strong class=\"editor-text-bold\">egards,</strong></b><b><strong class=\"editor-text-bold\"><br></strong></b><b><strong class=\"editor-text-bold\">Fee Management Team.</strong></b></p>",
+                                        "Importance": "Normal"
+                                    },
+                                    "path": "/v2/Mail"
+                                }
+                            }
+                        },
+                        "else": {
+                            "actions": {
+                                "Send_an_email_(V2)_1": {
+                                    "type": "ApiConnection",
+                                    "inputs": {
+                                        "host": {
+                                            "connection": {
+                                                "name": "@parameters('$connections')['outlook']['connectionId']"
+                                            }
+                                        },
+                                        "method": "post",
+                                        "body": {
+                                            "To": "@item()?['Email']",
+                                            "Subject": "Urgent: Your Fee Payment is Overdue!",
+                                            "Body": "<p class=\"editor-paragraph\">Dear @{item()?['Name']},<br><br>We hope this email finds you well. Your fee payment for @{item()?['Course']}<b><strong class=\"editor-text-bold\"> </strong></b>was due on<b><strong class=\"editor-text-bold\"> </strong></b>@{formatDateTime(item()?['DueDate'], 'yyyy-MM-dd')} and is now <b><strong class=\"editor-text-bold\">overdue</strong></b>.<br><br><b><strong class=\"editor-text-bold\">Total Fee</strong></b>: ₹@{item()?['TotalFee']}<br><b><strong class=\"editor-text-bold\">Paid Amount</strong></b>: ₹@{item()?['PaidAmount']}</p><p class=\"editor-paragraph\"><b><strong class=\"editor-text-bold\">Remaining Balance</strong></b>: ₹@{sub(item()?['TotalFee'], item()?['PaidAmount'])}<br><br>To avoid late penalties and ensure uninterrupted access to course resources, we kindly request you to <b><strong class=\"editor-text-bold\">settle the outstanding balance at the earliest</strong></b>.<br><br><b><strong class=\"editor-text-bold\">Best r</strong></b><b><strong class=\"editor-text-bold\">egards,</strong></b><b><strong class=\"editor-text-bold\"><br></strong></b><b><strong class=\"editor-text-bold\">Fee Management Team</strong></b><b><strong class=\"editor-text-bold\">.</strong></b></p>",
+                                            "Importance": "Normal"
+                                        },
+                                        "path": "/v2/Mail"
+                                    }
+                                }
+                            }
+                        },
+                        "expression": {
+                            "and": [
+                                {
+                                    "greaterOrEquals": [
+                                        "@items('For_each')?['DueDate']",
+                                        "@utcNow('yyyy-MM-dd')\r\n"
+                                    ]
+                                }
+                            ]
+                        },
+                        "type": "If"
+                    }
+                },
+                "runAfter": {
+                    "Execute_a_SQL_query_(V2)": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Foreach"
+            }
+        },
+        "outputs": {},
+        "parameters": {
+            "$connections": {
+                "type": "Object",
+                "defaultValue": {}
+            }
+        }
+    },
+    "parameters": {
+        "$connections": {
+            "type": "Object",
+            "value": {
+                "sql": {
+                    "id": "/subscriptions/1840448a-9309-4215-9aa6-5092ceda0fda/providers/Microsoft.Web/locations/westus2/managedApis/sql",
+                    "connectionId": "/subscriptions/1840448a-9309-4215-9aa6-5092ceda0fda/resourceGroups/FeeManagementRG/providers/Microsoft.Web/connections/sql",
+                    "connectionName": "sql"
+                },
+                "outlook": {
+                    "id": "/subscriptions/1840448a-9309-4215-9aa6-5092ceda0fda/providers/Microsoft.Web/locations/westus2/managedApis/outlook",
+                    "connectionId": "/subscriptions/1840448a-9309-4215-9aa6-5092ceda0fda/resourceGroups/FeeManagementRG/providers/Microsoft.Web/connections/outlook",
+                    "connectionName": "outlook"
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,23 @@
+<policies>
+    <inbound>
+        <cors allow-credentials="true">
+            <allowed-origins>
+                <origin>http://127.0.0.1:5500</origin>
+                <origin>https://feepaymentstorage.z5.web.core.windows.net/</origin>
+            </allowed-origins>
+            <allowed-methods preflight-result-max-age="600">
+                <method>GET</method>
+                <method>POST</method>
+                <method>OPTIONS</method>
+            </allowed-methods>
+            <allowed-headers>
+                <header>*</header>
+            </allowed-headers>
+        </cors>
+    </inbound>
+    <backend>
+        <forward-request />
+    </backend>
+    <outbound />
+    <on-error />
+</policies>
