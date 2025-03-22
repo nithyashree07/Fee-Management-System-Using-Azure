@@ -1,5 +1,5 @@
 const API_BASE_URL = "https://feepaymentapim1.azure-api.net";
-const API_KEY = "4bc601d72f0d40a2af83215c3de7b9a7"; 
+const API_KEY = "***********************************"; 
 
 // Azure AD Authentication Config
 const msalConfig = {
